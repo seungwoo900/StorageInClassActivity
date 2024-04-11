@@ -34,13 +34,11 @@ class MainActivity : AppCompatActivity() {
     lateinit var showButton: Button
     lateinit var comicImageView: ImageView
 
-    private var autoSave = false
-
     private lateinit var preferences: SharedPreferences
 
     private val internalFilename = "my_file"
     private lateinit var file: File
-    private lateinit var textBox: EditText
+    private lateinit var comicJsonObject: JSONObject
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,9 +59,7 @@ class MainActivity : AppCompatActivity() {
         preferences = getPreferences(MODE_PRIVATE)
         file = File(filesDir, internalFilename)
 
-        autoSave = preferences.getBoolean(AUTO_SAVE_KEY, false)
-
-        if(autoSave && file.exists()) {
+        if(file.exists()) {
             showComic(loadComic())
         }
 
@@ -85,32 +81,30 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun saveComic(comic: JSONObject) {
-        if (autoSave) {
-            try {
-                val outputStream = FileOutputStream(file)
-                outputStream.write(textBox.text.toString().toByteArray())
-                outputStream.close()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+        try {
+            val outputStream = FileOutputStream(file)
+            outputStream.write(comic.toString().toByteArray())
+            outputStream.close()
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
     private fun loadComic(): JSONObject {
-        if (autoSave && file.exists()) {
+        if (file.exists()) {
             try {
                 val br = BufferedReader(FileReader(file))
                 val text = StringBuilder()
                 var line: String?
                 while (br.readLine().also { line = it } != null) {
                     text.append(line)
-                    text.append('\n')
                 }
                 br.close()
-                textBox.setText(text.toString())
+                comicJsonObject = JSONObject(text.toString())
             } catch (e: IOException) {
                 e.printStackTrace()
             }
         }
+        return comicJsonObject
     }
 }
